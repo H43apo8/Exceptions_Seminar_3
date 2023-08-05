@@ -1,71 +1,63 @@
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.time.format.DateTimeParseException;
-import java.util.Arrays;
 import java.util.Scanner;
 
-public class program {
+public class Main {
+
     public static void main(String[] args) {
-        String pathToFile = "D:\\result\\";
-        rwDb users = new rwDb();
+        try {
+            // Запрашиваем у пользователя данные
+            Scanner scanner = new Scanner(System.in);
+            System.out.println("Введите Фамилию Имя Отчество дату рождения номер телефона пол (разделенные пробелом): ");
+            String input = scanner.nextLine();
 
-        System.out.println("Проверьте, существует ли последовательность каталогов - " + pathToFile);
-        System.out.println("Формат ввода данных: Петров Иван Иваныч 10.01.1983 79995556532 m");
-        System.out.println("Команды \u001B[31m quit \u001B[0m или \u001B[31m exit \u001B[0m завершают работу программы");
-        while(true){
+            // Разделяем введенные данные по пробелам и сохраняем в массив строк
+            String[] data = input.split(" ");
 
-            Scanner in = new Scanner(System.in);
-            System.out.print("Введите данные пользователя: ");
-            String cmd = in.nextLine();
-
-            if(cmd.equals("exit") || cmd.equals("quit")){
-                System.out.println("Работа с программой завершена");
-                break;
+            // Проверяем, что количество данных соответствует ожидаемому (6 элементов)
+            if (data.length != 6) {
+                throw new Exception("Неверное количество данных");
             }
 
-            try{
-                users.parseString(cmd);
-            } catch (ErrorArray e){
-                System.out.println(e.getMessage());
-                continue;
-            }
-            try{
-                users.convert();
-            } catch (DateTimeParseException e){
-                System.out.println("Неверный формат даты рождения.");
-                System.out.println("Формат должен быть следующим: день.месяц.год");
-                System.out.println("Например: 31.12.2020");
-                continue;
-            } catch (NumberFormatException e){
-                System.out.println("Неверный формат телефонного номера.");
-                System.out.println("Формат должен быть следующим: 79995556532 или +79995556532");
-                continue;
+            // Получаем значения из массива и сохраняем в соответствующие переменные
+            String surname = data[0];
+            String name = data[1];
+            String patronymic = data[2];
+            String birthDate = data[3];
+            long phoneNumber = Long.parseLong(data[4]);
+            char gender = data[5].charAt(0);
+
+            // Проверяем формат даты рождения
+            if (!isValidDate(birthDate)) {
+                throw new Exception("Неверный формат даты рождения");
             }
 
-            users.setFile(pathToFile, users.getUser()[0]);
-
-            try {
-                users.createDbFile(users.getFile());
-            } catch (Exception e){
-                System.out.println("Критическая ошибка!!! Программа завершает свою работу!");
-                System.out.println("Проверьте, существует ли постедовательность каталогов -  " + pathToFile);
-                System.out.println("где программа пытается создать файл.");
-                System.out.println("Если такого каталога не существует, то пропишите правильный путь к каталогу");
-                System.out.println("И после этого запустите программу снова");
-                break;
+            // Проверяем, что пол равен 'f' или 'm'
+            if (gender != 'f' && gender != 'm') {
+                throw new Exception("Неверный формат пола");
             }
 
-            try{
-                users.addUser(users.getFile());
-                System.out.print("Данные пользователя: ");
-                System.out.println(Arrays.toString(users.getUser()));
-                System.out.println("Записаны в файл: " + users.getFile());
-            } catch (IOException e){
-                System.out.println("Критическая ошибка!!! Программа завершает свою работу!");
-                System.out.println("Проверьте наличие файла по указанному пути - " + users.getFile());
-                System.out.println("И запустите программу снова.");
-                break;
-            }
+            // Создаем строку для записи в файл
+            String record = surname + " " + name + " " + patronymic + " " + birthDate + " " + phoneNumber + " " + gender;
 
+            // Создаем файл с названием равным фамилии и записываем данные в него
+            BufferedWriter writer = new BufferedWriter(new FileWriter(surname + ".txt", true));
+            writer.write(record);
+            writer.newLine();
+            writer.close();
+
+            System.out.println("Данные успешно записаны в файл.");
+
+        } catch (Exception e) {
+            // Обработка исключений
+            System.out.println("Ошибка: " + e.getMessage());
+            e.printStackTrace();
         }
+    }
+
+    // Метод для проверки формата даты рождения
+    private static boolean isValidDate(String date) {
+        return date.matches("\\d{2}\\.\\d{2}\\.\\d{4}");
     }
 }
